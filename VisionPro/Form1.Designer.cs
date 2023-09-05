@@ -28,8 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.m_RunBtn = new System.Windows.Forms.Button();
@@ -38,8 +36,6 @@
             this.m_HistogramTab = new System.Windows.Forms.TabPage();
             this.tabControl2 = new System.Windows.Forms.TabControl();
             this.m_HistogramInput = new System.Windows.Forms.TabPage();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.m_comboBoxHisROI = new System.Windows.Forms.ComboBox();
             this.m_HistogramOutput = new System.Windows.Forms.TabPage();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.m_HisOutTable = new System.Windows.Forms.TableLayoutPanel();
@@ -61,20 +57,41 @@
             this.label8 = new System.Windows.Forms.Label();
             this.m_BlobTab = new System.Windows.Forms.TabPage();
             this.tabControl3 = new System.Windows.Forms.TabControl();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.m_BlobInput = new System.Windows.Forms.TabPage();
+            this.m_BlobOutput = new System.Windows.Forms.TabPage();
             this.m_CaliperTab = new System.Windows.Forms.TabPage();
             this.tabControl4 = new System.Windows.Forms.TabControl();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.tabPage4 = new System.Windows.Forms.TabPage();
-            this.cogDisplay1 = new Cognex.VisionPro.Display.CogDisplay();
+            this.m_CaliperInput = new System.Windows.Forms.TabPage();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.m_gbEdgeMode = new System.Windows.Forms.GroupBox();
+            this.m_CaliperOutput = new System.Windows.Forms.TabPage();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.m_NumResult = new System.Windows.Forms.NumericUpDown();
+            this.m_NumFilter = new System.Windows.Forms.NumericUpDown();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.m_NumContrastThreshold = new System.Windows.Forms.NumericUpDown();
+            this.m_radioPair = new System.Windows.Forms.RadioButton();
+            this.m_radioSingle = new System.Windows.Forms.RadioButton();
+            this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
+            this.m_gbEdge1Polarity = new System.Windows.Forms.GroupBox();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.label12 = new System.Windows.Forms.Label();
+            this.m_NumEdgePairWidth = new System.Windows.Forms.NumericUpDown();
+            this.m_DL0 = new System.Windows.Forms.RadioButton();
+            this.m_LD0 = new System.Windows.Forms.RadioButton();
+            this.m_Any0 = new System.Windows.Forms.RadioButton();
+            this.m_DL1 = new System.Windows.Forms.RadioButton();
+            this.m_LD1 = new System.Windows.Forms.RadioButton();
+            this.m_Any1 = new System.Windows.Forms.RadioButton();
+            this.m_CaliperRes = new System.Windows.Forms.DataGridView();
+            this.cogDisplay1 = new Cognex.VisionPro.CogToolDisplay();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.m_HistogramTab.SuspendLayout();
             this.tabControl2.SuspendLayout();
-            this.m_HistogramInput.SuspendLayout();
-            this.groupBox1.SuspendLayout();
             this.m_HistogramOutput.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.m_HisOutTable.SuspendLayout();
@@ -82,7 +99,19 @@
             this.tabControl3.SuspendLayout();
             this.m_CaliperTab.SuspendLayout();
             this.tabControl4.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cogDisplay1)).BeginInit();
+            this.m_CaliperInput.SuspendLayout();
+            this.panel1.SuspendLayout();
+            this.m_gbEdgeMode.SuspendLayout();
+            this.m_CaliperOutput.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.m_NumResult)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_NumFilter)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_NumContrastThreshold)).BeginInit();
+            this.tableLayoutPanel3.SuspendLayout();
+            this.m_gbEdge1Polarity.SuspendLayout();
+            this.groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.m_NumEdgePairWidth)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_CaliperRes)).BeginInit();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -144,6 +173,7 @@
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(291, 419);
             this.tabControl1.TabIndex = 2;
+            this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
             // m_HistogramTab
             // 
@@ -169,7 +199,7 @@
             // 
             // m_HistogramInput
             // 
-            this.m_HistogramInput.Controls.Add(this.groupBox1);
+            this.m_HistogramInput.AutoScroll = true;
             this.m_HistogramInput.Location = new System.Drawing.Point(4, 22);
             this.m_HistogramInput.Name = "m_HistogramInput";
             this.m_HistogramInput.Padding = new System.Windows.Forms.Padding(3);
@@ -177,35 +207,6 @@
             this.m_HistogramInput.TabIndex = 0;
             this.m_HistogramInput.Text = "Input";
             this.m_HistogramInput.UseVisualStyleBackColor = true;
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.AutoSize = true;
-            this.groupBox1.Controls.Add(this.m_comboBoxHisROI);
-            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox1.Location = new System.Drawing.Point(3, 3);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(10);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(263, 355);
-            this.groupBox1.TabIndex = 0;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Region";
-            // 
-            // m_comboBoxHisROI
-            // 
-            this.m_comboBoxHisROI.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.m_comboBoxHisROI.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.m_comboBoxHisROI.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.m_comboBoxHisROI.ItemHeight = 13;
-            this.m_comboBoxHisROI.Items.AddRange(new object[] {
-            "<None - Use Entire Image>",
-            "CogRectangle"});
-            this.m_comboBoxHisROI.Location = new System.Drawing.Point(3, 16);
-            this.m_comboBoxHisROI.Margin = new System.Windows.Forms.Padding(10);
-            this.m_comboBoxHisROI.Name = "m_comboBoxHisROI";
-            this.m_comboBoxHisROI.Size = new System.Drawing.Size(257, 21);
-            this.m_comboBoxHisROI.TabIndex = 0;
-            this.m_comboBoxHisROI.SelectedIndexChanged += new System.EventHandler(this.m_comboBoxHisROI_SelectedIndexChanged);
             // 
             // m_HistogramOutput
             // 
@@ -424,8 +425,8 @@
             // 
             // tabControl3
             // 
-            this.tabControl3.Controls.Add(this.tabPage1);
-            this.tabControl3.Controls.Add(this.tabPage2);
+            this.tabControl3.Controls.Add(this.m_BlobInput);
+            this.tabControl3.Controls.Add(this.m_BlobOutput);
             this.tabControl3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl3.Location = new System.Drawing.Point(3, 3);
             this.tabControl3.Name = "tabControl3";
@@ -433,25 +434,25 @@
             this.tabControl3.Size = new System.Drawing.Size(277, 387);
             this.tabControl3.TabIndex = 1;
             // 
-            // tabPage1
+            // m_BlobInput
             // 
-            this.tabPage1.Location = new System.Drawing.Point(4, 22);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(269, 361);
-            this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Input";
-            this.tabPage1.UseVisualStyleBackColor = true;
+            this.m_BlobInput.Location = new System.Drawing.Point(4, 22);
+            this.m_BlobInput.Name = "m_BlobInput";
+            this.m_BlobInput.Padding = new System.Windows.Forms.Padding(3);
+            this.m_BlobInput.Size = new System.Drawing.Size(269, 361);
+            this.m_BlobInput.TabIndex = 0;
+            this.m_BlobInput.Text = "Input";
+            this.m_BlobInput.UseVisualStyleBackColor = true;
             // 
-            // tabPage2
+            // m_BlobOutput
             // 
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(269, 361);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Output";
-            this.tabPage2.UseVisualStyleBackColor = true;
+            this.m_BlobOutput.Location = new System.Drawing.Point(4, 22);
+            this.m_BlobOutput.Name = "m_BlobOutput";
+            this.m_BlobOutput.Padding = new System.Windows.Forms.Padding(3);
+            this.m_BlobOutput.Size = new System.Drawing.Size(269, 361);
+            this.m_BlobOutput.TabIndex = 1;
+            this.m_BlobOutput.Text = "Output";
+            this.m_BlobOutput.UseVisualStyleBackColor = true;
             // 
             // m_CaliperTab
             // 
@@ -466,8 +467,8 @@
             // 
             // tabControl4
             // 
-            this.tabControl4.Controls.Add(this.tabPage3);
-            this.tabControl4.Controls.Add(this.tabPage4);
+            this.tabControl4.Controls.Add(this.m_CaliperInput);
+            this.tabControl4.Controls.Add(this.m_CaliperOutput);
             this.tabControl4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl4.Location = new System.Drawing.Point(3, 3);
             this.tabControl4.Name = "tabControl4";
@@ -475,43 +476,358 @@
             this.tabControl4.Size = new System.Drawing.Size(277, 387);
             this.tabControl4.TabIndex = 1;
             // 
-            // tabPage3
+            // m_CaliperInput
             // 
-            this.tabPage3.Location = new System.Drawing.Point(4, 22);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(269, 361);
-            this.tabPage3.TabIndex = 0;
-            this.tabPage3.Text = "Input";
-            this.tabPage3.UseVisualStyleBackColor = true;
+            this.m_CaliperInput.AutoScroll = true;
+            this.m_CaliperInput.Controls.Add(this.panel1);
+            this.m_CaliperInput.Location = new System.Drawing.Point(4, 22);
+            this.m_CaliperInput.Name = "m_CaliperInput";
+            this.m_CaliperInput.Padding = new System.Windows.Forms.Padding(3);
+            this.m_CaliperInput.Size = new System.Drawing.Size(269, 361);
+            this.m_CaliperInput.TabIndex = 0;
+            this.m_CaliperInput.Text = "Input";
+            this.m_CaliperInput.UseVisualStyleBackColor = true;
             // 
-            // tabPage4
+            // panel1
             // 
-            this.tabPage4.Location = new System.Drawing.Point(4, 22);
-            this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage4.Size = new System.Drawing.Size(269, 361);
-            this.tabPage4.TabIndex = 1;
-            this.tabPage4.Text = "Output";
-            this.tabPage4.UseVisualStyleBackColor = true;
+            this.panel1.Controls.Add(this.tableLayoutPanel2);
+            this.panel1.Controls.Add(this.m_gbEdgeMode);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel1.Location = new System.Drawing.Point(3, 3);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(263, 290);
+            this.panel1.TabIndex = 0;
+            // 
+            // m_gbEdgeMode
+            // 
+            this.m_gbEdgeMode.Controls.Add(this.tableLayoutPanel3);
+            this.m_gbEdgeMode.Dock = System.Windows.Forms.DockStyle.Top;
+            this.m_gbEdgeMode.Location = new System.Drawing.Point(0, 0);
+            this.m_gbEdgeMode.Name = "m_gbEdgeMode";
+            this.m_gbEdgeMode.Size = new System.Drawing.Size(263, 187);
+            this.m_gbEdgeMode.TabIndex = 0;
+            this.m_gbEdgeMode.TabStop = false;
+            this.m_gbEdgeMode.Text = "Edge Mode";
+            // 
+            // m_CaliperOutput
+            // 
+            this.m_CaliperOutput.Controls.Add(this.m_CaliperRes);
+            this.m_CaliperOutput.Location = new System.Drawing.Point(4, 22);
+            this.m_CaliperOutput.Name = "m_CaliperOutput";
+            this.m_CaliperOutput.Padding = new System.Windows.Forms.Padding(3);
+            this.m_CaliperOutput.Size = new System.Drawing.Size(269, 361);
+            this.m_CaliperOutput.TabIndex = 1;
+            this.m_CaliperOutput.Text = "Output";
+            this.m_CaliperOutput.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanel2
+            // 
+            this.tableLayoutPanel2.ColumnCount = 2;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel2.Controls.Add(this.m_NumResult, 1, 2);
+            this.tableLayoutPanel2.Controls.Add(this.m_NumFilter, 1, 1);
+            this.tableLayoutPanel2.Controls.Add(this.label9, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.label10, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this.label11, 0, 2);
+            this.tableLayoutPanel2.Controls.Add(this.m_NumContrastThreshold, 1, 0);
+            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 187);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            this.tableLayoutPanel2.RowCount = 3;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(263, 100);
+            this.tableLayoutPanel2.TabIndex = 3;
+            // 
+            // m_NumResult
+            // 
+            this.m_NumResult.Location = new System.Drawing.Point(134, 69);
+            this.m_NumResult.Maximum = new decimal(new int[] {
+            32767,
+            0,
+            0,
+            0});
+            this.m_NumResult.Name = "m_NumResult";
+            this.m_NumResult.Size = new System.Drawing.Size(120, 20);
+            this.m_NumResult.TabIndex = 5;
+            this.m_NumResult.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.m_NumResult.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // m_NumFilter
+            // 
+            this.m_NumFilter.Location = new System.Drawing.Point(134, 36);
+            this.m_NumFilter.Maximum = new decimal(new int[] {
+            32767,
+            0,
+            0,
+            0});
+            this.m_NumFilter.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.m_NumFilter.Name = "m_NumFilter";
+            this.m_NumFilter.Size = new System.Drawing.Size(120, 20);
+            this.m_NumFilter.TabIndex = 4;
+            this.m_NumFilter.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.m_NumFilter.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(10, 10);
+            this.label9.Margin = new System.Windows.Forms.Padding(10);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(96, 13);
+            this.label9.TabIndex = 0;
+            this.label9.Text = "Contrast Threshold";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(10, 43);
+            this.label10.Margin = new System.Windows.Forms.Padding(10);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(104, 13);
+            this.label10.TabIndex = 1;
+            this.label10.Text = "Filter Half Size Pixels";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(10, 76);
+            this.label11.Margin = new System.Windows.Forms.Padding(10);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(89, 13);
+            this.label11.TabIndex = 2;
+            this.label11.Text = "Maximum Results";
+            // 
+            // m_NumContrastThreshold
+            // 
+            this.m_NumContrastThreshold.DecimalPlaces = 1;
+            this.m_NumContrastThreshold.Location = new System.Drawing.Point(134, 3);
+            this.m_NumContrastThreshold.Maximum = new decimal(new int[] {
+            32767,
+            0,
+            0,
+            0});
+            this.m_NumContrastThreshold.Name = "m_NumContrastThreshold";
+            this.m_NumContrastThreshold.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.m_NumContrastThreshold.Size = new System.Drawing.Size(120, 20);
+            this.m_NumContrastThreshold.TabIndex = 3;
+            this.m_NumContrastThreshold.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.m_NumContrastThreshold.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            // 
+            // m_radioPair
+            // 
+            this.m_radioPair.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.m_radioPair.AutoSize = true;
+            this.m_radioPair.Location = new System.Drawing.Point(131, 3);
+            this.m_radioPair.Name = "m_radioPair";
+            this.m_radioPair.Size = new System.Drawing.Size(71, 24);
+            this.m_radioPair.TabIndex = 1;
+            this.m_radioPair.Text = "Edge Pair";
+            this.m_radioPair.UseVisualStyleBackColor = true;
+            this.m_radioPair.CheckedChanged += new System.EventHandler(this.m_radioPair_CheckedChanged);
+            // 
+            // m_radioSingle
+            // 
+            this.m_radioSingle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_radioSingle.AutoSize = true;
+            this.m_radioSingle.Checked = true;
+            this.m_radioSingle.Location = new System.Drawing.Point(43, 3);
+            this.m_radioSingle.Name = "m_radioSingle";
+            this.m_radioSingle.Size = new System.Drawing.Size(82, 24);
+            this.m_radioSingle.TabIndex = 0;
+            this.m_radioSingle.TabStop = true;
+            this.m_radioSingle.Text = "Single Edge";
+            this.m_radioSingle.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanel3
+            // 
+            this.tableLayoutPanel3.ColumnCount = 2;
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel3.Controls.Add(this.m_radioSingle, 0, 0);
+            this.tableLayoutPanel3.Controls.Add(this.m_radioPair, 1, 0);
+            this.tableLayoutPanel3.Controls.Add(this.groupBox3, 0, 1);
+            this.tableLayoutPanel3.Controls.Add(this.m_gbEdge1Polarity, 1, 1);
+            this.tableLayoutPanel3.Controls.Add(this.label12, 0, 2);
+            this.tableLayoutPanel3.Controls.Add(this.m_NumEdgePairWidth, 1, 2);
+            this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 16);
+            this.tableLayoutPanel3.Name = "tableLayoutPanel3";
+            this.tableLayoutPanel3.RowCount = 3;
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(257, 168);
+            this.tableLayoutPanel3.TabIndex = 0;
+            // 
+            // m_gbEdge1Polarity
+            // 
+            this.m_gbEdge1Polarity.Controls.Add(this.m_Any1);
+            this.m_gbEdge1Polarity.Controls.Add(this.m_LD1);
+            this.m_gbEdge1Polarity.Controls.Add(this.m_DL1);
+            this.m_gbEdge1Polarity.Enabled = false;
+            this.m_gbEdge1Polarity.Location = new System.Drawing.Point(131, 33);
+            this.m_gbEdge1Polarity.Name = "m_gbEdge1Polarity";
+            this.m_gbEdge1Polarity.Size = new System.Drawing.Size(123, 99);
+            this.m_gbEdge1Polarity.TabIndex = 3;
+            this.m_gbEdge1Polarity.TabStop = false;
+            this.m_gbEdge1Polarity.Text = "Edge 1 Polarity";
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.m_Any0);
+            this.groupBox3.Controls.Add(this.m_LD0);
+            this.groupBox3.Controls.Add(this.m_DL0);
+            this.groupBox3.Location = new System.Drawing.Point(3, 33);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(122, 99);
+            this.groupBox3.TabIndex = 2;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Edge 0 Polarity";
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(10, 145);
+            this.label12.Margin = new System.Windows.Forms.Padding(10);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(84, 13);
+            this.label12.TabIndex = 4;
+            this.label12.Text = "Edge Pair Width";
+            // 
+            // m_NumEdgePairWidth
+            // 
+            this.m_NumEdgePairWidth.Enabled = false;
+            this.m_NumEdgePairWidth.Location = new System.Drawing.Point(131, 138);
+            this.m_NumEdgePairWidth.Maximum = new decimal(new int[] {
+            32767,
+            0,
+            0,
+            0});
+            this.m_NumEdgePairWidth.Name = "m_NumEdgePairWidth";
+            this.m_NumEdgePairWidth.Size = new System.Drawing.Size(120, 20);
+            this.m_NumEdgePairWidth.TabIndex = 5;
+            this.m_NumEdgePairWidth.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.m_NumEdgePairWidth.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            // 
+            // m_DL0
+            // 
+            this.m_DL0.AutoSize = true;
+            this.m_DL0.Location = new System.Drawing.Point(10, 20);
+            this.m_DL0.Name = "m_DL0";
+            this.m_DL0.Size = new System.Drawing.Size(86, 17);
+            this.m_DL0.TabIndex = 0;
+            this.m_DL0.Text = "Dark to Light";
+            this.m_DL0.UseVisualStyleBackColor = true;
+            this.m_DL0.CheckedChanged += new System.EventHandler(this.edge0_CheckedChanged);
+            // 
+            // m_LD0
+            // 
+            this.m_LD0.AutoSize = true;
+            this.m_LD0.Location = new System.Drawing.Point(10, 44);
+            this.m_LD0.Name = "m_LD0";
+            this.m_LD0.Size = new System.Drawing.Size(86, 17);
+            this.m_LD0.TabIndex = 1;
+            this.m_LD0.Text = "Light to Dark";
+            this.m_LD0.UseVisualStyleBackColor = true;
+            this.m_LD0.CheckedChanged += new System.EventHandler(this.edge0_CheckedChanged);
+            // 
+            // m_Any0
+            // 
+            this.m_Any0.AutoSize = true;
+            this.m_Any0.Checked = true;
+            this.m_Any0.Location = new System.Drawing.Point(10, 68);
+            this.m_Any0.Name = "m_Any0";
+            this.m_Any0.Size = new System.Drawing.Size(80, 17);
+            this.m_Any0.TabIndex = 2;
+            this.m_Any0.TabStop = true;
+            this.m_Any0.Text = "Any Polarity";
+            this.m_Any0.UseVisualStyleBackColor = true;
+            this.m_Any0.CheckedChanged += new System.EventHandler(this.edge0_CheckedChanged);
+            // 
+            // m_DL1
+            // 
+            this.m_DL1.AutoSize = true;
+            this.m_DL1.Location = new System.Drawing.Point(7, 20);
+            this.m_DL1.Name = "m_DL1";
+            this.m_DL1.Size = new System.Drawing.Size(86, 17);
+            this.m_DL1.TabIndex = 0;
+            this.m_DL1.Text = "Dark to Light";
+            this.m_DL1.UseVisualStyleBackColor = true;
+            this.m_DL1.CheckedChanged += new System.EventHandler(this.edge1_CheckedChanged);
+            // 
+            // m_LD1
+            // 
+            this.m_LD1.AutoSize = true;
+            this.m_LD1.Location = new System.Drawing.Point(7, 44);
+            this.m_LD1.Name = "m_LD1";
+            this.m_LD1.Size = new System.Drawing.Size(86, 17);
+            this.m_LD1.TabIndex = 1;
+            this.m_LD1.Text = "Light to Dark";
+            this.m_LD1.UseVisualStyleBackColor = true;
+            this.m_LD1.CheckedChanged += new System.EventHandler(this.edge1_CheckedChanged);
+            // 
+            // m_Any1
+            // 
+            this.m_Any1.AutoSize = true;
+            this.m_Any1.Checked = true;
+            this.m_Any1.Location = new System.Drawing.Point(7, 68);
+            this.m_Any1.Name = "m_Any1";
+            this.m_Any1.Size = new System.Drawing.Size(80, 17);
+            this.m_Any1.TabIndex = 2;
+            this.m_Any1.TabStop = true;
+            this.m_Any1.Text = "Any Polarity";
+            this.m_Any1.UseVisualStyleBackColor = true;
+            this.m_Any1.CheckedChanged += new System.EventHandler(this.edge1_CheckedChanged);
+            // 
+            // m_CaliperRes
+            // 
+            this.m_CaliperRes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.m_CaliperRes.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.m_CaliperRes.Location = new System.Drawing.Point(3, 3);
+            this.m_CaliperRes.Name = "m_CaliperRes";
+            this.m_CaliperRes.ReadOnly = true;
+            this.m_CaliperRes.RowHeadersVisible = false;
+            this.m_CaliperRes.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.m_CaliperRes.Size = new System.Drawing.Size(263, 355);
+            this.m_CaliperRes.TabIndex = 0;
             // 
             // cogDisplay1
             // 
-            this.cogDisplay1.ColorMapLowerClipColor = System.Drawing.Color.Black;
-            this.cogDisplay1.ColorMapLowerRoiLimit = 0D;
-            this.cogDisplay1.ColorMapPredefined = Cognex.VisionPro.Display.CogDisplayColorMapPredefinedConstants.None;
-            this.cogDisplay1.ColorMapUpperClipColor = System.Drawing.Color.Black;
-            this.cogDisplay1.ColorMapUpperRoiLimit = 1D;
             this.cogDisplay1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cogDisplay1.DoubleTapZoomCycleLength = 2;
-            this.cogDisplay1.DoubleTapZoomSensitivity = 2.5D;
             this.cogDisplay1.Location = new System.Drawing.Point(303, 0);
-            this.cogDisplay1.MouseWheelMode = Cognex.VisionPro.Display.CogDisplayMouseWheelModeConstants.Zoom1;
-            this.cogDisplay1.MouseWheelSensitivity = 1D;
             this.cogDisplay1.Name = "cogDisplay1";
-            this.cogDisplay1.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("cogDisplay1.OcxState")));
+            this.cogDisplay1.SelectedRecordKey = null;
+            this.cogDisplay1.ShowRecordsDropDown = true;
             this.cogDisplay1.Size = new System.Drawing.Size(497, 450);
             this.cogDisplay1.TabIndex = 3;
+            this.cogDisplay1.Tool = null;
+            this.cogDisplay1.ToolSyncObject = null;
+            this.cogDisplay1.UserRecord = null;
             // 
             // Form1
             // 
@@ -527,9 +843,6 @@
             this.tabControl1.ResumeLayout(false);
             this.m_HistogramTab.ResumeLayout(false);
             this.tabControl2.ResumeLayout(false);
-            this.m_HistogramInput.ResumeLayout(false);
-            this.m_HistogramInput.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
             this.m_HistogramOutput.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.m_HisOutTable.ResumeLayout(false);
@@ -538,7 +851,23 @@
             this.tabControl3.ResumeLayout(false);
             this.m_CaliperTab.ResumeLayout(false);
             this.tabControl4.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cogDisplay1)).EndInit();
+            this.m_CaliperInput.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.m_gbEdgeMode.ResumeLayout(false);
+            this.m_CaliperOutput.ResumeLayout(false);
+            this.tableLayoutPanel2.ResumeLayout(false);
+            this.tableLayoutPanel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.m_NumResult)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_NumFilter)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_NumContrastThreshold)).EndInit();
+            this.tableLayoutPanel3.ResumeLayout(false);
+            this.tableLayoutPanel3.PerformLayout();
+            this.m_gbEdge1Polarity.ResumeLayout(false);
+            this.m_gbEdge1Polarity.PerformLayout();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.m_NumEdgePairWidth)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_CaliperRes)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -556,15 +885,12 @@
         private System.Windows.Forms.TabPage m_HistogramOutput;
         private System.Windows.Forms.TabPage m_BlobTab;
         private System.Windows.Forms.TabControl tabControl3;
-        private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.TabPage m_BlobInput;
+        private System.Windows.Forms.TabPage m_BlobOutput;
         private System.Windows.Forms.TabPage m_CaliperTab;
         private System.Windows.Forms.TabControl tabControl4;
-        private System.Windows.Forms.TabPage tabPage3;
-        private System.Windows.Forms.TabPage tabPage4;
-        private Cognex.VisionPro.Display.CogDisplay cogDisplay1;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.ComboBox m_comboBoxHisROI;
+        private System.Windows.Forms.TabPage m_CaliperInput;
+        private System.Windows.Forms.TabPage m_CaliperOutput;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.TableLayoutPanel m_HisOutTable;
         private System.Windows.Forms.Label label2;
@@ -583,6 +909,30 @@
         private System.Windows.Forms.TextBox m_tbMode;
         private System.Windows.Forms.TextBox m_tbMedian;
         private System.Windows.Forms.TextBox m_tbMax;
+        private System.Windows.Forms.GroupBox m_gbEdgeMode;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+        private System.Windows.Forms.NumericUpDown m_NumResult;
+        private System.Windows.Forms.NumericUpDown m_NumFilter;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.NumericUpDown m_NumContrastThreshold;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
+        private System.Windows.Forms.RadioButton m_radioSingle;
+        private System.Windows.Forms.RadioButton m_radioPair;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.GroupBox m_gbEdge1Polarity;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.NumericUpDown m_NumEdgePairWidth;
+        private System.Windows.Forms.RadioButton m_Any0;
+        private System.Windows.Forms.RadioButton m_LD0;
+        private System.Windows.Forms.RadioButton m_DL0;
+        private System.Windows.Forms.RadioButton m_Any1;
+        private System.Windows.Forms.RadioButton m_LD1;
+        private System.Windows.Forms.RadioButton m_DL1;
+        private System.Windows.Forms.DataGridView m_CaliperRes;
+        private Cognex.VisionPro.CogToolDisplay cogDisplay1;
     }
 }
 
