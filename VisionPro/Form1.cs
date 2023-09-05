@@ -12,6 +12,12 @@ using Cognex.VisionPro.ImageFile;
 using Cognex.VisionPro.Blob;
 using Cognex.VisionPro.Caliper;
 using Cognex.VisionPro.ImageProcessing;
+using Cognex.VisionPro.Implementation;
+using System.Reflection;
+using System.Collections;
+using System.Security.Policy;
+using System.Reflection.Emit;
+using System.Diagnostics;
 
 namespace VisionPro
 {
@@ -20,6 +26,7 @@ namespace VisionPro
         CogImageFileTool m_cogImageFile;
         CogHistogramTool m_cogHistogramTool;
         CogCaliperTool m_cogCaliperTool;
+        CogBlobTool m_cogBlobTool;
         ROI m_roi;
         Panel panel;
         CogRectangle m_cogRec;
@@ -34,6 +41,7 @@ namespace VisionPro
             m_cogImageFile = new CogImageFileTool();
             m_cogHistogramTool = new CogHistogramTool();
             m_cogCaliperTool = new CogCaliperTool();
+            m_cogBlobTool = new CogBlobTool();
             m_cogRec = new CogRectangle();
             m_cogRectAffine = new CogRectangleAffine();
 
@@ -51,6 +59,15 @@ namespace VisionPro
             tempPanel.Dock = DockStyle.Top;
 
             m_roi.m_comboBoxROI.SelectedIndexChanged += m_comboBoxROI_SelectedIndexChanged;
+
+
+            for (int i = 3; i >= 0; i--)
+                m_cbBlobProperties.SelectedIndex = i;
+
+            m_cbSegMode.SelectedIndex = 2;
+            m_cbSegPolarity.SelectedIndex = 0;
+            m_cbConnectMode.SelectedIndex = 0;
+            m_cbConnectClean.SelectedIndex = 2;
         }
 
         private void m_OpenBtn_Click(object sender, EventArgs e)
@@ -78,13 +95,15 @@ namespace VisionPro
                 MessageBox.Show("No Image Selected");
                 return;
             }
+            m_cogImageFile.Run();
+            cogDisplay1.Display.Image = m_cogImageFile.OutputImage;
+            cogDisplay1.Display.Fit();
             if (tabControl1.SelectedTab.Name == "m_HistogramTab")
                 runHistogram();
             else if (tabControl1.SelectedTab.Name == "m_BlobTab")
                 runBlob();
             else if (tabControl1.SelectedTab.Name == "m_CaliperTab")
                 runCaliper();
-            
         }
 
         private void runHistogram()
@@ -107,11 +126,76 @@ namespace VisionPro
             m_tbSample.Text = m_cogHistogramTool.Result.NumSamples.ToString();
 
             cogDisplay1.Tool = m_cogHistogramTool;
-
         }
 
         private void runBlob()
         {
+            if (m_roi.m_comboBoxROI.SelectedItem.ToString() == "CogRectangle")
+                m_cogBlobTool.Region = m_cogRec;
+            else if (m_roi.m_comboBoxROI.SelectedItem.ToString() == "CogRectangleAffine")
+                m_cogBlobTool.Region = m_cogRectAffine;
+
+            m_cogBlobTool.InputImage = m_cogImageFile.OutputImage;
+           
+            m_cogBlobTool.RunParams.ConnectivityMinPixels = (int)m_NumConnectionMin.Value;
+
+            if (m_cbSegPolarity.SelectedItem.ToString() == "Dark blobs, Light background")
+                m_cogBlobTool.RunParams.SegmentationParams.Polarity = CogBlobSegmentationPolarityConstants.DarkBlobs;
+            else
+                m_cogBlobTool.RunParams.SegmentationParams.Polarity = CogBlobSegmentationPolarityConstants.LightBlobs;
+
+            m_cogBlobTool.Run();
+
+            List<blobResults> m_listResults = new List<blobResults>();
+            CogBlobResultCollection m_cogBlobResults = m_cogBlobTool.Results.GetBlobs();
+            for(int i = 0; i < m_cogBlobResults.Count; i++)
+            {
+                CogBlobResult m_res = m_cogBlobResults[i];
+                blobResults m_blobResults = new blobResults(
+                    i,m_res.ID,m_res.Area,m_res.CenterOfMassX,m_res.CenterOfMassY,m_res.Label.ToString(),m_res.Angle,
+                    m_res.GetBoundary().LineWidthInScreenPixels,m_res.Perimeter,m_res.NumChildren,m_res.InertiaX,
+                    m_res.InertiaY,m_res.InertiaMin,m_res.InertiaMax,m_res.Elongation,m_res.Acircularity,m_res.AcircularityRms,
+                    m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CenterX, m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CenterY,
+                    m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CornerOriginX, m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CornerOppositeX,
+                    m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CornerOriginY, m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CornerOppositeY,
+                    m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).SideXLength, m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).SideYLength,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, m_res.NotClipped);
+                m_listResults.Add(m_blobResults);
+            }
+
+            cogDisplay1.Tool = m_cogBlobTool;
+            showBlobResult(m_BlobMeasurementTable.Rows, m_listResults);
+        }
+
+        private void showBlobResult(DataGridViewRowCollection rows, List<blobResults> m_listResults)
+        {
+            int i = 2;
+            List<string> m_listData = new List<string>();
+            m_dgvBlobResults.Columns.Add("m_measure0", "N");
+            m_dgvBlobResults.Columns.Add("m_measure1", "ID");
+            m_listData.Add("N");
+            m_listData.Add("ID");
+
+            foreach (DataGridViewRow r in rows)
+            {
+                m_dgvBlobResults.Columns.Add("m_measure" + i++, r.Cells[0].Value.ToString());
+                m_listData.Add(r.Cells[0].Value.ToString());
+            }
+            foreach(blobResults r in m_listResults)
+            {
+                i = 0;
+                string[] m_listTemp = new string[m_listData.Count];
+                foreach (string name in m_listData)
+                {
+                    PropertyInfo propInfo = typeof(blobResults).GetProperty(name);
+                    if (propInfo != null)
+                    {
+                        object value = propInfo.GetValue(r);
+                        m_listTemp[i++]=(value.ToString());
+                    }
+                }
+                m_dgvBlobResults.Rows.Add(m_listTemp);
+            }
 
         }
 
@@ -119,6 +203,8 @@ namespace VisionPro
         {
             if (m_roi.m_comboBoxROI.SelectedItem.ToString() == "CogRectangleAffine")
                 m_cogCaliperTool.Region = m_cogRectAffine;
+            else
+                m_cogCaliperTool.Region = null;
             m_cogCaliperTool.InputImage = m_cogImageFile.OutputImage;
             m_cogCaliperTool.RunParams.EdgeMode = CogCaliperEdgeModeConstants.SingleEdge;
             m_cogCaliperTool.RunParams.Edge1Position = (double)m_NumEdgePairWidth.Value;
@@ -159,6 +245,14 @@ namespace VisionPro
 
             m_cogCaliperTool.Run();
             cogDisplay1.Tool = m_cogCaliperTool;
+            CogCaliperResults results = m_cogCaliperTool.Results;
+            for (int i = 0; i < results.Count; i++)
+            {
+                foreach (CogCaliperEdge e in results.Edges)
+                {
+                    //MessageBox.Show(results.Edges.IndexOf(results.Edges[]) +":"+results.Edges.IndexOf(e)+": "+e.Position + ", " + e.PositionX + ", " + e.PositionY + "\n" + (results[i].Edge0.Position + ", " + results[i].Edge0.PositionX + ", " + results[i].Edge0.PositionY) + "\n" + (results[i].Edge1.Position + ", " + results[i].Edge1.PositionX + ", " + results[i].Edge1.PositionY) + "\n" + e.GetHashCode() + "\n" + results[i].GetHashCode() + "\n" + results.GetHashCode());
+                }
+            }
             showCaliperResult(m_cogCaliperTool.Results);
         }
 
@@ -236,8 +330,6 @@ namespace VisionPro
                     }
                 }
             }
-            
-            //cogDisplay1.Container.Add(m_cogImageFile.OutputImage);
             m_CaliperRes.DataSource = dt;
         }
 
@@ -329,6 +421,8 @@ namespace VisionPro
             }
             else if (((TabControl)sender).SelectedIndex == 2) //Caliper
             {
+                if(m_roi.m_comboBoxROI.SelectedIndex != 0 && m_roi.m_comboBoxROI.SelectedIndex != 2)
+                    m_roi.m_comboBoxROI.SelectedIndex = 2;
                 m_roi.m_comboBoxROI.Items.Remove("CogRectangle"); //Remove CogRectangle
                 m_CaliperInput.Controls.Add(panel);
                 
@@ -358,6 +452,287 @@ namespace VisionPro
         {
             if (((RadioButton)sender).Checked)
                 edge0 = ((RadioButton)sender).Text;
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ComboBox m_comboBox = (ComboBox)sender;
+            int index = m_BlobMeasurementTable.Rows.Add();
+            m_BlobMeasurementTable.Rows[index].Cells[0].Value = m_comboBox.SelectedItem.ToString();
+            ((DataGridViewComboBoxCell)m_BlobMeasurementTable.Rows[index].Cells[1]).Value = "Runtime";
+            m_comboBox.Items.RemoveAt(m_cbBlobProperties.SelectedIndex);
+        }
+
+        private void m_BlobMeasurementTable_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex == -1) return;
+            DataGridView m_dataGridView = (DataGridView)sender;
+            int m_intRow = e.RowIndex;
+            int m_intColumn = e.ColumnIndex;
+            DataGridViewRow m_dgvRow = m_dataGridView.Rows[m_intRow];
+            DataGridViewCell m_dgvCell = m_dgvRow.Cells[m_intColumn];
+            if (m_intColumn == 1)
+            {
+                if (m_dgvCell.Value.ToString() != "Filter")
+                {
+                    m_dgvRow.Cells[2].Value = null;
+                    m_dgvRow.Cells[3].Value = null;
+                    m_dgvRow.Cells[4].Value = null;
+                    m_dgvRow.Cells[2].ReadOnly = true;
+                    m_dgvRow.Cells[3].ReadOnly = true;
+                    m_dgvRow.Cells[4].ReadOnly = true;
+                }
+                else
+                {
+                    m_dgvRow.Cells[2].Value = "Exclude";
+                    m_dgvRow.Cells[3].Value = "0";
+                    m_dgvRow.Cells[4].Value = "0";
+                    m_dgvRow.Cells[2].ReadOnly = false;
+                    m_dgvRow.Cells[3].ReadOnly = false;
+                    m_dgvRow.Cells[4].ReadOnly = false;
+                }
+            }
+            else if (m_intColumn == 2)
+            {
+
+            }
+            else if (m_intColumn == 3)
+            {
+
+            }
+            else if (m_intColumn == 4)
+            {
+
+            }
+        }
+
+        private void m_BlobMeasurementTable_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        {
+            m_BlobMeasurementTable.CommitEdit(DataGridViewDataErrorContexts.Commit);
+        }
+
+        private void m_cbSegMode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string m_CogBlobSegmentationModeConstants = m_cbSegMode.SelectedItem.ToString();
+            switch (m_CogBlobSegmentationModeConstants)
+            {
+                case "None":
+                    m_cogBlobTool.RunParams.SegmentationParams.Mode = CogBlobSegmentationModeConstants.None;
+                    m_labelPolarity.Visible = false; m_cbSegPolarity.Visible = false;
+                    m_labelSeg1.Text = "Scaling Value";
+                    m_NumSegmentation1.Value = 150;
+                    m_labelSeg2.Visible = false; m_NumSegmentation2.Visible = false;
+                    m_labelSeg3.Visible = false; m_NumSegmentation3.Visible = false;
+                    m_labelSeg4.Visible = false; m_NumSegmentation4.Visible = false;
+                    m_labelSeg5.Visible = false; m_NumSegmentation5.Visible = false;
+                    m_SegMap.Visible = false;
+                    break;
+                case "Map":
+                    m_cogBlobTool.RunParams.SegmentationParams.Mode = CogBlobSegmentationModeConstants.Map;
+                    m_labelPolarity.Visible = false; m_cbSegPolarity.Visible = false;
+                    m_labelSeg1.Text = "Scaling Value";
+                    m_NumSegmentation1.Value = 150;
+                    m_labelSeg2.Visible = false; m_NumSegmentation2.Visible = false;
+                    m_labelSeg3.Visible = false; m_NumSegmentation3.Visible = false;
+                    m_labelSeg4.Visible = false; m_NumSegmentation4.Visible = false;
+                    m_labelSeg5.Visible = false; m_NumSegmentation5.Visible = false;
+                    m_SegMap.Visible = true;
+                    break;
+                case "Hard Threshold (Relative)":
+                    m_cogBlobTool.RunParams.SegmentationParams.Mode = CogBlobSegmentationModeConstants.HardRelativeThreshold;
+                    m_labelPolarity.Visible = true; m_cbSegPolarity.Visible = true;
+                    m_labelSeg1.Text = "Threshold: "; m_NumSegmentation1.Value = 50;
+                    m_labelSeg2.Visible = true; m_NumSegmentation2.Visible = true;
+                    m_labelSeg2.Text = "Low Tail: "; m_NumSegmentation2.Value = 0;
+                    m_labelSeg3.Visible = true; m_NumSegmentation3.Visible = true;
+                    m_labelSeg3.Text = "High Tail: "; m_NumSegmentation3.Value = 0;
+                    m_labelSeg4.Visible = false; m_NumSegmentation4.Visible = false;
+                    m_labelSeg5.Visible = false; m_NumSegmentation5.Visible = false;
+                    m_SegMap.Visible = false;
+                    break;
+                case "Hard Threshold (Dynamic)":
+                    m_cogBlobTool.RunParams.SegmentationParams.Mode = CogBlobSegmentationModeConstants.HardDynamicThreshold;
+                    m_labelPolarity.Visible = true; m_cbSegPolarity.Visible = true;
+                    m_labelSeg1.Text = "Low Tail: "; m_NumSegmentation1.Value = 0;
+                    m_labelSeg2.Visible = true; m_NumSegmentation2.Visible = true;
+                    m_labelSeg2.Text = "High Tail: "; m_NumSegmentation2.Value = 0;
+                    m_labelSeg3.Visible = false; m_NumSegmentation3.Visible = false;
+                    m_labelSeg4.Visible = false; m_NumSegmentation4.Visible = false;
+                    m_labelSeg5.Visible = false; m_NumSegmentation5.Visible = false;
+                    m_SegMap.Visible = false;
+                    break;
+                case "Soft Threshold (Fixed)":
+                    m_cogBlobTool.RunParams.SegmentationParams.Mode = CogBlobSegmentationModeConstants.SoftFixedThreshold;
+                    m_labelPolarity.Visible = true; m_cbSegPolarity.Visible = true;
+                    m_labelSeg1.Text = "Low Threshold: "; m_NumSegmentation1.Value = 100;
+                    m_labelSeg2.Visible = true; m_NumSegmentation2.Visible = true;
+                    m_labelSeg2.Text = "High Threshold: "; m_NumSegmentation2.Value = 128;
+                    m_labelSeg3.Visible = true; m_NumSegmentation3.Visible = true;
+                    m_labelSeg3.Text = "Softness: "; m_NumSegmentation3.Value = 254;
+                    m_labelSeg4.Visible = false; m_NumSegmentation4.Visible = false;
+                    m_labelSeg5.Visible = false; m_NumSegmentation5.Visible = false;
+                    m_SegMap.Visible = false;
+                    break;
+                case "Soft Threshold (Relative)":
+                    m_cogBlobTool.RunParams.SegmentationParams.Mode = CogBlobSegmentationModeConstants.SoftRelativeThreshold;
+                    m_labelPolarity.Visible = true; m_cbSegPolarity.Visible = true;
+                    m_labelSeg1.Text = "Low Threshold: "; m_NumSegmentation1.Value = 40;
+                    m_labelSeg2.Visible = true; m_NumSegmentation2.Visible = true;
+                    m_labelSeg2.Text = "High Threshold: "; m_NumSegmentation2.Value = 60;
+                    m_labelSeg3.Visible = true; m_NumSegmentation3.Visible = true;
+                    m_labelSeg3.Text = "Low Tail: "; m_NumSegmentation3.Value = 0;
+                    m_labelSeg4.Visible = true; m_NumSegmentation4.Visible = true;
+                    m_labelSeg4.Text = "High Tail: "; m_NumSegmentation4.Value = 0;
+                    m_labelSeg5.Visible = true; m_NumSegmentation5.Visible = true;
+                    m_labelSeg5.Text = "Softness: "; m_NumSegmentation5.Value = 254;
+                    m_SegMap.Visible = false;
+                    break;
+                //case "Subtraction Image":
+                   // m_cogBlobTool.RunParams.SegmentationParams.Mode = CogBlobSegmentationModeConstants.SubtractionImage;
+                    //break;
+                default:
+                    m_cogBlobTool.RunParams.SegmentationParams.Mode = CogBlobSegmentationModeConstants.HardFixedThreshold;
+                    m_labelPolarity.Visible = true; m_cbSegPolarity.Visible = true;
+                    m_labelSeg1.Text = "Threshold:";
+                    m_NumSegmentation1.Value = 128;
+                    m_labelSeg2.Visible = false; m_NumSegmentation2.Visible = false;
+                    m_labelSeg3.Visible = false; m_NumSegmentation3.Visible = false;
+                    m_labelSeg4.Visible = false; m_NumSegmentation4.Visible = false;
+                    m_labelSeg5.Visible = false; m_NumSegmentation5.Visible = false;
+                    m_SegMap.Visible = false;
+                    break;
+            }
+        }
+        
+        private void m_NumSegmentation1_ValueChanged(object sender, EventArgs e)
+        {
+            string m_CogBlobSegmentationModeConstants = m_cbSegMode.SelectedItem.ToString();
+            switch (m_CogBlobSegmentationModeConstants)
+            {
+                case "None":
+                case "Map":
+                    m_cogBlobTool.RunParams.SegmentationParams.ScalingValue = (int)m_NumSegmentation1.Value;
+                    break;
+                case "Hard Threshold (Relative)":
+                    m_cogBlobTool.RunParams.SegmentationParams.HardRelativeThreshold = (int)m_NumSegmentation1.Value;
+                    break;
+                case "Hard Threshold (Dynamic)":
+                    m_cogBlobTool.RunParams.SegmentationParams.TailLow = (int)m_NumSegmentation1.Value;
+                    break;
+                case "Soft Threshold (Fixed)":
+                    m_cogBlobTool.RunParams.SegmentationParams.SoftFixedThresholdLow = (int)m_NumSegmentation1.Value;
+                    break;
+                case "Soft Threshold (Relative)":
+                    m_cogBlobTool.RunParams.SegmentationParams.SoftRelativeThresholdLow = (int)m_NumSegmentation1.Value;
+                    break;
+                //case "Subtraction Image":
+                //break;
+                default:
+                    m_cogBlobTool.RunParams.SegmentationParams.HardFixedThreshold = (int)m_NumSegmentation1.Value;
+                    break;
+            }
+        }
+        
+        private void m_NumSegmentation2_ValueChanged(object sender, EventArgs e)
+        {
+            string m_CogBlobSegmentationModeConstants = m_cbSegMode.SelectedItem.ToString();
+            switch (m_CogBlobSegmentationModeConstants)
+            {
+                case "Hard Threshold (Relative)":
+                    m_cogBlobTool.RunParams.SegmentationParams.TailLow = (int)m_NumSegmentation2.Value;
+                    break;
+                case "Hard Threshold (Dynamic)":
+                    m_cogBlobTool.RunParams.SegmentationParams.TailHigh = (int)m_NumSegmentation2.Value;
+                    break;
+                case "Soft Threshold (Fixed)":
+                    m_cogBlobTool.RunParams.SegmentationParams.SoftFixedThresholdHigh = (int)m_NumSegmentation2.Value;
+                    break;
+                case "Soft Threshold (Relative)":
+                    m_cogBlobTool.RunParams.SegmentationParams.SoftRelativeThresholdHigh= (int)m_NumSegmentation2.Value;
+                    break;
+                default:
+                    break;
+            }
+        }
+       
+        private void m_NumSegmentation3_ValueChanged(object sender, EventArgs e)
+        {
+            string m_CogBlobSegmentationModeConstants = m_cbSegMode.SelectedItem.ToString();
+            switch (m_CogBlobSegmentationModeConstants)
+            {
+                case "Hard Threshold (Relative)":
+                    m_cogBlobTool.RunParams.SegmentationParams.TailHigh = (int)m_NumSegmentation3.Value;
+                    break;
+                case "Soft Threshold (Fixed)":
+                    m_cogBlobTool.RunParams.SegmentationParams.Softness = (int)m_NumSegmentation3.Value;
+                    break;
+                case "Soft Threshold (Relative)":
+                    m_cogBlobTool.RunParams.SegmentationParams.TailLow = (int)m_NumSegmentation2.Value;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void m_NumSegmentation4_ValueChanged(object sender, EventArgs e)
+        {
+            string m_CogBlobSegmentationModeConstants = m_cbSegMode.SelectedItem.ToString();
+            switch (m_CogBlobSegmentationModeConstants)
+            {
+                case "Soft Threshold (Relative)":
+                    m_cogBlobTool.RunParams.SegmentationParams.TailHigh = (int)m_NumSegmentation4.Value;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void m_NumSegmentation5_ValueChanged(object sender, EventArgs e)
+        {
+            string m_CogBlobSegmentationModeConstants = m_cbSegMode.SelectedItem.ToString();
+            switch (m_CogBlobSegmentationModeConstants)
+            {
+                case "Soft Threshold (Relative)":
+                    m_cogBlobTool.RunParams.SegmentationParams.Softness = (int)m_NumSegmentation5.Value;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void m_cbConnectClean_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            m_NumConnectionMin.Enabled = true;
+            if (m_cbConnectClean.SelectedItem.ToString() == "Fill")
+                m_cogBlobTool.RunParams.ConnectivityCleanup = CogBlobConnectivityCleanupConstants.Fill;
+            else if (m_cbConnectClean.SelectedItem.ToString() == "Prune")
+                m_cogBlobTool.RunParams.ConnectivityCleanup = CogBlobConnectivityCleanupConstants.Prune;
+            else
+            {
+                m_cogBlobTool.RunParams.ConnectivityCleanup = CogBlobConnectivityCleanupConstants.None;
+                m_NumConnectionMin.Enabled = false;
+            }
+
+
+        }
+
+        private void m_cbConnectMode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (m_cbConnectMode.SelectedItem.ToString() == "Whole Image")
+            {
+                m_cogBlobTool.RunParams.ConnectivityMode = CogBlobConnectivityModeConstants.WholeImageGreyScale;
+                m_cbConnectClean.Enabled = false;
+                m_NumConnectionMin.Enabled = false;
+            }
+            else
+            {
+                if(m_cbConnectMode.SelectedItem.ToString() == "Labeled")
+                    m_cogBlobTool.RunParams.ConnectivityMode = CogBlobConnectivityModeConstants.Labeled;
+                else
+                    m_cogBlobTool.RunParams.ConnectivityMode = CogBlobConnectivityModeConstants.GreyScale;
+                m_cbConnectClean.Enabled = true;
+                m_NumConnectionMin.Enabled = true;
+            }
         }
     }
 }
