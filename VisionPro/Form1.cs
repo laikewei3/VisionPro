@@ -39,7 +39,7 @@ namespace VisionPro
         String edge0 = "Any Polarity";
         String edge1 = "Any Polarity";
         Dictionary<String, ArrayList> m_dictBlobFilters = new Dictionary<String, ArrayList>();
-
+        Dictionary<double, int> m_dictCaliperIndex = new Dictionary<double, int>();
         /*
         Dictionary<String,String> m_dictBlobFilters = new Dictionary<String, String>();
         String m_strBlobsFilter = "";
@@ -294,8 +294,9 @@ namespace VisionPro
 
         private void runCaliper()
         {
+            m_dictCaliperIndex.Clear();
             m_CaliperRes.Columns.Clear();
-            m_CaliperRes.Rows.Clear();
+            m_CaliperRes.DataSource = null;
             m_CaliperRes.Refresh();
             if (m_roi.m_comboBoxROI.SelectedItem.ToString() == "CogRectangleAffine")
                 m_cogCaliperTool.Region = m_cogRectAffine;
@@ -342,13 +343,14 @@ namespace VisionPro
             m_cogCaliperTool.Run();
             cogDisplay1.Tool = m_cogCaliperTool;
             CogCaliperResults results = m_cogCaliperTool.Results;
-            for (int i = 0; i < results.Count; i++)
+
+            int j = 0;
+            foreach (CogCaliperEdge e in results.Edges)
             {
-                foreach (CogCaliperEdge e in results.Edges)
-                {
-                    //MessageBox.Show(results.Edges.IndexOf(results.Edges[]) +":"+results.Edges.IndexOf(e)+": "+e.Position + ", " + e.PositionX + ", " + e.PositionY + "\n" + (results[i].Edge0.Position + ", " + results[i].Edge0.PositionX + ", " + results[i].Edge0.PositionY) + "\n" + (results[i].Edge1.Position + ", " + results[i].Edge1.PositionX + ", " + results[i].Edge1.PositionY) + "\n" + e.GetHashCode() + "\n" + results[i].GetHashCode() + "\n" + results.GetHashCode());
-                }
+                m_dictCaliperIndex.Add(e.Position, j);
+                j++;
             }
+
             showCaliperResult(m_cogCaliperTool.Results);
         }
 
@@ -388,8 +390,8 @@ namespace VisionPro
                         dt.Rows.Add(new object[]{
                             res.ID,
                             res.Score,
-                            results.Edges.IndexOf(res.Edge0),
-                            results.Edges.IndexOf(res.Edge1),
+                            m_dictCaliperIndex[res.Edge0.Position],
+                            m_dictCaliperIndex[res.Edge1.Position],
                             res.Width,
                             res.Position,
                             res.PositionX,
@@ -416,7 +418,7 @@ namespace VisionPro
                         dt.Rows.Add(new object[]{
                         res.ID,
                         res.Score,
-                        m_cogCaliperTool.Results.IndexOf(res),
+                        m_dictCaliperIndex[res.Edge0.Position],
                         res.Position,
                         res.PositionX,
                         res.PositionY,
@@ -430,16 +432,15 @@ namespace VisionPro
         }
 
         private void m_comboBoxROI_SelectedIndexChanged(object sender, EventArgs e)
-        {
+        {   
             if (m_roi.m_comboBoxROI.SelectedIndex == 0)
             {
+                if (!cogDisplay1.SelectedRecordKey.StartsWith("Current"))
+                    return;
                 if (cogDisplay1.Display.InteractiveGraphics.Count > 0)
                     cogDisplay1.Display.InteractiveGraphics.Remove(0);
                 return;
             }
-
-            if (cogDisplay1.Display.InteractiveGraphics.Count > 0)
-                cogDisplay1.Display.InteractiveGraphics.Remove(0);
 
             ICogGraphicInteractive m_interactive = null;
             if (m_roi.m_comboBoxROI.SelectedItem.ToString() == "CogRectangle")
@@ -477,7 +478,25 @@ namespace VisionPro
             m_interactive.Interactive = true;
             m_interactive.GraphicDOFEnableBase = CogGraphicDOFConstants.All;
             m_interactive.LineStyle = CogGraphicLineStyleConstants.Solid;
-            cogDisplay1.Display.InteractiveGraphics.Add(m_interactive, "test", false);
+
+
+            if (cogDisplay1.SelectedRecordKey == null)
+            {
+                if (cogDisplay1.Display.InteractiveGraphics.Count > 0)
+                    cogDisplay1.Display.InteractiveGraphics.Remove(0);
+                cogDisplay1.Display.InteractiveGraphics.Add(m_interactive, "test", false);
+            }
+            else if (cogDisplay1.SelectedRecordKey.StartsWith("Current"))
+            {
+                if (cogDisplay1.Display.InteractiveGraphics.Count > 0)
+                    cogDisplay1.Display.InteractiveGraphics.Remove(0);
+                cogDisplay1.Display.InteractiveGraphics.Add(m_interactive, "test", false);
+            }
+            else
+                return;
+            
+
+           
         }
 
         private void rectInteractiveChanged(object sender, CogChangedEventArgs e)
@@ -898,7 +917,6 @@ namespace VisionPro
             }
             catch (Exception ex)
             {
-                MessageBox.Show("ERROR");
             }
         }
 
@@ -907,17 +925,59 @@ namespace VisionPro
             CogGraphicInteractiveCollection m_gic = cogDisplay1.Display.Selection;
             if (m_gic.Count == 0)
                 return;
-            
-            if (tabControl1.SelectedIndex == 1)
+            try
             {
-                CogCompositeShape m_cogPolygon = (CogCompositeShape)m_gic[0];
-                int ID = m_cogPolygon.ID;
-                int index = int.Parse(m_cogBlobTool.Results.GetBlobs().IndexOf(m_cogBlobTool.Results.GetBlobByID(ID)).ToString());
-                m_dgvBlobResults.ClearSelection();
-                DataGridViewRow row = m_dgvBlobResults.Rows.Cast<DataGridViewRow>().Where(r => r.Cells[0].Value.ToString().Equals(index.ToString())).First();
-                row.Selected = true;
-            }
+                if (tabControl1.SelectedIndex == 1)
+                {
+                    CogCompositeShape m_cogPolygon = (CogCompositeShape)m_gic[0];
+                    int ID = m_cogPolygon.ID;
+                    int index = int.Parse(m_cogBlobTool.Results.GetBlobs().IndexOf(m_cogBlobTool.Results.GetBlobByID(ID)).ToString());
+                    m_dgvBlobResults.ClearSelection();
+                    DataGridViewRow row = m_dgvBlobResults.Rows.Cast<DataGridViewRow>().Where(r => r.Cells[0].Value.ToString().Equals(index.ToString())).First();
+                    row.Selected = true;
+                }
+                else if (tabControl1.SelectedIndex == 2)
+                {
+                    CogCompositeShape m_cogPolygon = (CogCompositeShape)m_gic[0];
+                    int ID = m_cogPolygon.ID;
+                    m_CaliperRes.ClearSelection();
+                    DataGridViewRow row = m_CaliperRes.Rows.Cast<DataGridViewRow>().Where(r => r.Cells[0].Value.ToString().Equals(ID.ToString())).First();
+                    row.Selected = true;
+                }
 
+            }
+            catch (Exception) { }
+        }
+
+        private void m_CaliperRes_SelectionChanged(object sender, EventArgs e)
+        {
+            if (m_CaliperRes.Rows.Count == 0) { return; }
+            if (m_CaliperRes.SelectedRows.Count == 0) { return; }
+
+            try
+            {
+                int m_intNum = m_CaliperRes.SelectedRows[0].Index;
+                int ID = int.Parse(m_CaliperRes.SelectedRows[0].Cells[0].Value.ToString());
+
+                if (cogDisplay1.Display.InteractiveGraphics.Count >= m_intNum)
+                {
+                    CogInteractiveGraphicsContainer m_cogInteractContainer = cogDisplay1.Display.InteractiveGraphics;
+                    int i = 0;
+                    foreach (var graphic in m_cogInteractContainer)
+                    {
+                        Cognex.VisionPro.Interop.CogCompositeShape select = (Cognex.VisionPro.Interop.CogCompositeShape)graphic;
+                        int id = select.ID;
+                        if (id == ID)
+                        {
+                            cogDisplay1.Display.InteractiveGraphics[i].Selected = true;
+                        }
+                        i++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
         }
     }
 }

@@ -1454,6 +1454,8 @@
             // 
             // m_CaliperRes
             // 
+            this.m_CaliperRes.AllowUserToAddRows = false;
+            this.m_CaliperRes.AllowUserToDeleteRows = false;
             this.m_CaliperRes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.m_CaliperRes.Dock = System.Windows.Forms.DockStyle.Fill;
             this.m_CaliperRes.Location = new System.Drawing.Point(3, 3);
@@ -1463,6 +1465,7 @@
             this.m_CaliperRes.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.m_CaliperRes.Size = new System.Drawing.Size(380, 355);
             this.m_CaliperRes.TabIndex = 0;
+            this.m_CaliperRes.SelectionChanged += new System.EventHandler(this.m_CaliperRes_SelectionChanged);
             // 
             // cogDisplay1
             // 
