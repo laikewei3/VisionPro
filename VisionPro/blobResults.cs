@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace VisionPro
 {
-    internal class blobResults
+    public class blobResults
     {
         public int N { get; set; }
         public int ID { get; set; }
