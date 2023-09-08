@@ -17,7 +17,7 @@ namespace VisionPro
         public double Angle { get; set; }
         public double BoundaryPixelLength { get; set; }
         public double Perimeter { get; set; }
-        public double NumChildren { get; set; }
+        public int NumChildren { get; set; }
         public double InertiaX { get; set; }
         public double InertiaY { get; set; }
         public double InertiaMin { get; set; }
@@ -54,7 +54,7 @@ namespace VisionPro
         public double BoundPrincipalAspect { get; set; }
         public double NotClipped { get; set; }
 
-        public blobResults(int n, int Id, double area, double centerMassX, double centerMassY, String connectivityLabel, double angle, double boundaryPixelLength, double perimeter, double numChildren, double inertiaX, double inertiaY, double inertiaMin, double inertiaMax, double elongation, double acircularity, double acircularityRms, double imageBoundCenterX, double imageBoundCenterY, double imageBoundMinX, double imageBoundMaxX, double imageBoundMinY, double imageBoundMaxY, double imageBoundWidth, double imageBoundHeight, double imageBoundAspect, double medianX, double medianY, double boundCenterX, double boundCenterY, double boundMinX, double boundMaxX, double boundMinY, double boundMaxY, double boundWidth, double boundHeight, double boundAspect, double boundPrincipalMinX, double boundPrincipalMaxX, double boundPrincipalMinY, double boundPrincipalMaxY, double boundPrincipalWidth, double boundPrincipalHeight, double boundPrincipalAspect, double notClipped)
+        public blobResults(int n, int Id, double area, double centerMassX, double centerMassY, String connectivityLabel, double angle, double boundaryPixelLength, double perimeter, int numChildren, double inertiaX, double inertiaY, double inertiaMin, double inertiaMax, double elongation, double acircularity, double acircularityRms, double imageBoundCenterX, double imageBoundCenterY, double imageBoundMinX, double imageBoundMaxX, double imageBoundMinY, double imageBoundMaxY, double imageBoundWidth, double imageBoundHeight, double imageBoundAspect, double medianX, double medianY, double boundCenterX, double boundCenterY, double boundMinX, double boundMaxX, double boundMinY, double boundMaxY, double boundWidth, double boundHeight, double boundAspect, double boundPrincipalMinX, double boundPrincipalMaxX, double boundPrincipalMinY, double boundPrincipalMaxY, double boundPrincipalWidth, double boundPrincipalHeight, double boundPrincipalAspect, double notClipped)
         {
             N = n;
             ID = Id;

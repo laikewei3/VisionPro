@@ -2,26 +2,15 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Cognex.VisionPro;
 using Cognex.VisionPro.ImageFile;
 using Cognex.VisionPro.Blob;
 using Cognex.VisionPro.Caliper;
 using Cognex.VisionPro.ImageProcessing;
-using Cognex.VisionPro.Implementation;
 using System.Reflection;
 using System.Collections;
-using System.Security.Policy;
-using System.Reflection.Emit;
-using System.Diagnostics;
-using System.Linq.Dynamic.Core.Parser;
-using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Cognex.VisionPro.DSCameraSetup.Implementation.Internal;
 using Cognex.VisionPro.Display;
 
 namespace VisionPro
@@ -36,10 +25,11 @@ namespace VisionPro
         Panel panel;
         CogRectangle m_cogRec;
         CogRectangleAffine m_cogRectAffine;
-        String edge0 = "Any Polarity";
-        String edge1 = "Any Polarity";
+        string edge0 = "Any Polarity";
+        string edge1 = "Any Polarity";
         Dictionary<String, ArrayList> m_dictBlobFilters = new Dictionary<String, ArrayList>();
         Dictionary<double, int> m_dictCaliperIndex = new Dictionary<double, int>();
+
         /*
         Dictionary<String,String> m_dictBlobFilters = new Dictionary<String, String>();
         String m_strBlobsFilter = "";
@@ -132,19 +122,18 @@ namespace VisionPro
             m_roi.m_comboBoxROI.SelectedIndexChanged += m_comboBoxROI_SelectedIndexChanged;
             cogDisplay1.Display.Click += displayClicked;
 
-            for (int i = 3; i >= 0; i--)
-                m_cbBlobProperties.SelectedIndex = i;
+            for (int i = 0; i < 4; i++)
+            {
+                m_cbBlobProperties.SelectedIndex = 0;
+                m_cbBlobProperties.SelectedIndex = -1;
+            }
 
             m_cbSegMode.SelectedIndex = 2;
             m_cbSegPolarity.SelectedIndex = 0;
             m_cbConnectMode.SelectedIndex = 0;
             m_cbConnectClean.SelectedIndex = 2;
 
-
-            cogDisplay1.Display.MultiSelectionEnabled = false;
         }
-
-        
 
         private void m_OpenBtn_Click(object sender, EventArgs e)
         {
@@ -156,7 +145,8 @@ namespace VisionPro
                 {
                     m_cogImageFile.Operator.Open(m_ofd.FileName, CogImageFileModeConstants.Read);
                     m_cogImageFile.Run();
-                    cogDisplay1.Display.Image = m_cogImageFile.OutputImage;
+                    cogDisplay1.Tool = m_cogImageFile;
+                    cogDisplay1.SelectedRecordKey = "LastRun.OutputImage";
                     cogDisplay1.Display.Fit();
                 }
             }
@@ -203,6 +193,17 @@ namespace VisionPro
             m_tbVariance.Text = m_cogHistogramTool.Result.Variance.ToString("F4");
             m_tbSample.Text = m_cogHistogramTool.Result.NumSamples.ToString();
 
+            Int32[] m_bin = m_cogHistogramTool.Result.GetHistogram();
+            double cumulative = 0;
+            for (int i = 0; i < m_bin.Length; i++)
+            {
+                cumulative += (double)m_bin[i] / (double)m_cogHistogramTool.Result.NumSamples * 100;
+                string[] m_temp = new string[3];
+                m_temp[0]= (i+1).ToString();
+                m_temp[1] = m_bin[i].ToString();
+                m_temp[2] = cumulative.ToString("F2");
+                m_dgvHisData.Rows.Add(m_temp);
+            }
             cogDisplay1.Tool = m_cogHistogramTool;
         }
 
@@ -229,21 +230,71 @@ namespace VisionPro
             m_cogBlobTool.Run();
 
             List<blobResults> m_listResults = new List<blobResults>();
-
+            if(m_cogBlobTool.Results == null)
+            {
+                MessageBox.Show("ERROR! Results NULL!");
+                return;
+            }
             CogBlobResultCollection m_cogBlobResults = m_cogBlobTool.Results.GetBlobs();
             for (int i = 0; i < m_cogBlobResults.Count; i++)
             {
                 CogBlobResult m_res = m_cogBlobResults[i];
+                double m_centerOfMassX = m_res.CenterOfMassX;
+                double m_centerOfMassY = m_res.CenterOfMassY;
+
+                double m_principalOriX = m_res.GetBoundingBox(CogBlobAxisConstants.Principal).CornerOriginX;
+                double m_principalOppX = m_res.GetBoundingBox(CogBlobAxisConstants.Principal).CornerOppositeX;
+                double m_principalXX = m_res.GetBoundingBox(CogBlobAxisConstants.Principal).CornerXX;
+                double m_principalYX = m_res.GetBoundingBox(CogBlobAxisConstants.Principal).CornerYX;
+
+                double m_principalOriY = m_res.GetBoundingBox(CogBlobAxisConstants.Principal).CornerOriginY;
+                double m_principalOppY = m_res.GetBoundingBox(CogBlobAxisConstants.Principal).CornerOppositeY;
+                double m_principalXY = m_res.GetBoundingBox(CogBlobAxisConstants.Principal).CornerXY;
+                double m_principalYY = m_res.GetBoundingBox(CogBlobAxisConstants.Principal).CornerYY;
+
+                double m_principalMaxX = Math.Max(m_principalYX, Math.Max(Math.Max(m_principalOriX, m_principalOppX), m_principalXX));
+                double m_principalMaxY = Math.Max(m_principalXY, Math.Max(Math.Max(m_principalOriY, m_principalOppY), m_principalYY));
+                double m_principalMinX = Math.Min(m_principalYX, Math.Min(Math.Min(m_principalOriX, m_principalOppX), m_principalXX));
+                double m_principalMinY = Math.Min(m_principalXY, Math.Min(Math.Min(m_principalOriY, m_principalOppY), m_principalYY));
+
                 blobResults m_blobResults = new blobResults(
-                    i, m_res.ID, m_res.Area, m_res.CenterOfMassX, m_res.CenterOfMassY, m_res.Label.ToString(), m_res.Angle,
-                    m_res.GetBoundary().LineWidthInScreenPixels, m_res.Perimeter, m_res.NumChildren, m_res.InertiaX,
-                    m_res.InertiaY, m_res.InertiaMin, m_res.InertiaMax, m_res.Elongation, m_res.Acircularity, m_res.AcircularityRms,
-                    m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CenterX, m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CenterY,
-                    m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CornerOriginX, m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CornerOppositeX,
-                    m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CornerOriginY, m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).CornerOppositeY,
-                    m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).SideXLength, m_res.GetBoundingBox(CogBlobAxisConstants.SelectedSpace).SideYLength,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, m_res.NotClipped);
+                    i, m_res.ID, m_res.Area, Math.Round(m_centerOfMassX,4), Math.Round(m_centerOfMassY,4), m_res.Label.ToString(), Math.Round(m_res.Angle,5),
+                    Math.Round(m_res.GetBoundary().Perimeter,5), Math.Round(m_res.Perimeter,5), m_res.NumChildren, Math.Round(m_res.InertiaX,3),
+                    Math.Round(m_res.InertiaY,3), Math.Round(m_res.InertiaMin,3), Math.Round(m_res.InertiaMax,3), Math.Round(m_res.Elongation,5), Math.Round(m_res.Acircularity,5), Math.Round(m_res.AcircularityRms,5),
+
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.PixelAlignedNoExclude).CenterX, 5), 
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.PixelAlignedNoExclude).CenterY, 5),
+                    m_res.GetBoundingBox(CogBlobAxisConstants.PixelAlignedNoExclude).CornerOriginX,
+                    m_res.GetBoundingBox(CogBlobAxisConstants.PixelAlignedNoExclude).CornerOppositeX,
+                    m_res.GetBoundingBox(CogBlobAxisConstants.PixelAlignedNoExclude).CornerOriginY,
+                    m_res.GetBoundingBox(CogBlobAxisConstants.PixelAlignedNoExclude).CornerOppositeY,
+                    m_res.GetBoundingBox(CogBlobAxisConstants.PixelAlignedNoExclude).SideXLength, 
+                    m_res.GetBoundingBox(CogBlobAxisConstants.PixelAlignedNoExclude).SideYLength,
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.PixelAlignedNoExclude).SideYLength/ m_res.GetBoundingBox(CogBlobAxisConstants.PixelAlignedNoExclude).SideXLength,4),
+
+                    Math.Round(m_res.GetMedianX(CogBlobAxisConstants.ExtremaAngle),5),
+                    Math.Round(m_res.GetMedianY(CogBlobAxisConstants.ExtremaAngle),5), 
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.ExtremaAngle).CenterX, 5), 
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.ExtremaAngle).CenterY, 5),
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.ExtremaAngle).CornerOriginX - m_centerOfMassX, 3),
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.ExtremaAngle).CornerOppositeX - m_centerOfMassX, 3),
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.ExtremaAngle).CornerOriginY - m_centerOfMassY, 3),
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.ExtremaAngle).CornerOppositeY - m_centerOfMassY, 3),
+                    m_res.GetBoundingBox(CogBlobAxisConstants.ExtremaAngle).SideXLength, 
+                    m_res.GetBoundingBox(CogBlobAxisConstants.ExtremaAngle).SideYLength,
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.ExtremaAngle).SideYLength/ m_res.GetBoundingBox(CogBlobAxisConstants.ExtremaAngle).SideXLength,4),
+
+                    m_principalMinX,
+                    m_principalMaxX,
+                    m_principalMinY,
+                    m_principalMaxY,
+
+                    m_res.GetBoundingBox(CogBlobAxisConstants.Principal).SideXLength, 
+                    m_res.GetBoundingBox(CogBlobAxisConstants.Principal).SideYLength,
+                    Math.Round(m_res.GetBoundingBox(CogBlobAxisConstants.Principal).SideYLength / m_res.GetBoundingBox(CogBlobAxisConstants.Principal).SideXLength, 4), 
+                    m_res.NotClipped);
                 m_listResults.Add(m_blobResults);
+                
             }
             /*
             createFilterString();
@@ -298,6 +349,7 @@ namespace VisionPro
             m_CaliperRes.Columns.Clear();
             m_CaliperRes.DataSource = null;
             m_CaliperRes.Refresh();
+
             if (m_roi.m_comboBoxROI.SelectedItem.ToString() == "CogRectangleAffine")
                 m_cogCaliperTool.Region = m_cogRectAffine;
             else
@@ -389,23 +441,23 @@ namespace VisionPro
                         CogCaliperResult res = results[i];
                         dt.Rows.Add(new object[]{
                             res.ID,
-                            res.Score,
+                             Math.Round(res.Score, 4),
                             m_dictCaliperIndex[res.Edge0.Position],
                             m_dictCaliperIndex[res.Edge1.Position],
-                            res.Width,
-                            res.Position,
-                            res.PositionX,
-                            res.PositionY,
-                            res.GetContributingScores()[0],
-                            res.Edge0.Contrast,
-                            res.Edge0.Position,
-                            res.Edge0.PositionX,
-                            res.Edge0.PositionY,
-                            res.Edge1.Contrast,
-                            res.Edge1.Position,
-                            res.Edge1.PositionX,
-                            res.Edge1.PositionY
-                        });
+                             Math.Round(res.Width, 4),
+                             Math.Round(res.Position, 4),
+                             Math.Round(res.PositionX, 4),
+                             Math.Round(res.PositionY, 4),
+                             Math.Round(res.GetContributingScores()[0], 4),
+                             Math.Round(res.Edge0.Contrast, 4),
+                             Math.Round(res.Edge0.Position, 4),
+                             Math.Round(res.Edge0.PositionX, 4),
+                             Math.Round(res.Edge0.PositionY, 4),
+                             Math.Round(res.Edge1.Contrast, 4),
+                             Math.Round(res.Edge1.Position, 4),
+                             Math.Round(res.Edge1.PositionX, 4),
+                            Math.Round(res.Edge1.PositionY, 4)
+                    });
                     }
                 }
             }
@@ -417,13 +469,13 @@ namespace VisionPro
                     {
                         dt.Rows.Add(new object[]{
                         res.ID,
-                        res.Score,
+                        Math.Round(res.Score, 4),
                         m_dictCaliperIndex[res.Edge0.Position],
-                        res.Position,
-                        res.PositionX,
-                        res.PositionY,
-                        res.GetContributingScores()[0],
-                        res.Edge0.Contrast
+                        Math.Round(res.Position, 4),
+                        Math.Round( res.PositionX, 4),
+                        Math.Round(res.PositionY, 4),
+                        Math.Round(res.GetContributingScores()[0], 4),
+                        Math.Round(res.Edge0.Contrast, 4)
                     });
                     }
                 }
@@ -435,8 +487,9 @@ namespace VisionPro
         {   
             if (m_roi.m_comboBoxROI.SelectedIndex == 0)
             {
-                if (!cogDisplay1.SelectedRecordKey.StartsWith("Current"))
-                    return;
+                if (cogDisplay1.SelectedRecordKey != null)
+                    if (!cogDisplay1.SelectedRecordKey.StartsWith("Current"))
+                        return;
                 if (cogDisplay1.Display.InteractiveGraphics.Count > 0)
                     cogDisplay1.Display.InteractiveGraphics.Remove(0);
                 return;
@@ -492,11 +545,6 @@ namespace VisionPro
                     cogDisplay1.Display.InteractiveGraphics.Remove(0);
                 cogDisplay1.Display.InteractiveGraphics.Add(m_interactive, "test", false);
             }
-            else
-                return;
-            
-
-           
         }
 
         private void rectInteractiveChanged(object sender, CogChangedEventArgs e)
@@ -572,7 +620,19 @@ namespace VisionPro
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             ComboBox m_comboBox = (ComboBox)sender;
+            if (m_comboBox.SelectedIndex == -1)
+                return;
             String m_strName = m_comboBox.SelectedItem.ToString();
+            if(m_strName == "<ADD ALL>")
+            {
+                m_comboBox.Items.RemoveAt(m_comboBox.Items.Count-1);
+                for(int i = 0; i < m_comboBox.Items.Count;)
+                {
+                    m_comboBox.SelectedIndex = 0;
+                    m_comboBox.SelectedIndex = -1;
+                }
+                return;
+            }
             int index = m_BlobMeasurementTable.Rows.Add();
             m_BlobMeasurementTable.Rows[index].Cells[0].Value = m_strName;
             ((DataGridViewComboBoxCell)m_BlobMeasurementTable.Rows[index].Cells[1]).Value = "Runtime";
@@ -582,12 +642,27 @@ namespace VisionPro
             Enum.TryParse<CogBlobMeasureConstants>(m_strName, out measureConstants);
             if (m_strName == "ConnectivityLabel")
                 Enum.TryParse<CogBlobMeasureConstants>("Label", out measureConstants);
+            else if (m_strName == "NumChildren")
+                Enum.TryParse<CogBlobMeasureConstants>("NumUnfilteredChildren", out measureConstants);
+            else if (m_strName.StartsWith("Median"))
+                Enum.TryParse<CogBlobMeasureConstants>(m_strName.Insert(m_strName.Length-1,"ExtremaAngle"), out measureConstants);
+            else if(m_strName.StartsWith("BoundPrincipal"))
+                Enum.TryParse<CogBlobMeasureConstants>(m_strName.Insert(14, "Axis").Insert(5, "ingBox"), out measureConstants);
+            else if(m_strName.StartsWith("ImageBound"))
+                Enum.TryParse<CogBlobMeasureConstants>("BoundingBoxPixelAlignedNoExclude"+m_strName.Substring(10), out measureConstants);
+            else if (m_strName == "BoundaryPixelLength")
+                Enum.TryParse<CogBlobMeasureConstants>(m_strName, out measureConstants);
+            else if (m_strName.StartsWith("Bound"))
+                Enum.TryParse<CogBlobMeasureConstants>(m_strName.Insert(5, "ingBoxExtremaAngle"), out measureConstants);
+            
+            
             m_cogBlobMeasure.Measure = measureConstants;
             m_cogBlobMeasure.FilterMode = CogBlobFilterModeConstants.ExcludeBlobsInRange;
             m_cogBlobMeasure.FilterRangeHigh = 0;
             m_cogBlobMeasure.FilterRangeLow = 0;
             m_cogBlobMeasure.Mode = CogBlobMeasureModeConstants.PreCompute;
             m_cogBlobTool.RunParams.RunTimeMeasures.Add(m_cogBlobMeasure);
+
             ArrayList m_tempAL = new ArrayList();
             m_tempAL.Add(m_cogBlobTool.RunParams.RunTimeMeasures.IndexOf(m_cogBlobMeasure));
             m_tempAL.Add(m_cogBlobMeasure);
@@ -630,6 +705,7 @@ namespace VisionPro
                 else
                 {
                     m_cogBlobMeasure.Mode = CogBlobMeasureModeConstants.Filter;
+                    m_dgvRow.Cells[2].ReadOnly = false;
                     m_dgvRow.Cells[2].Value = "Exclude";
                     m_dgvRow.Cells[3].Value = "0";
                     m_dgvRow.Cells[4].Value = "0";
@@ -650,11 +726,15 @@ namespace VisionPro
             }
             else if (m_intColumn == 3)
             {
+                if (m_dgvCell.Value == null)
+                    return;
                 //m_dictBlobFilters[m_dgvRow.Cells[0].Value.ToString()] = m_dgvRow.Cells[2].Value + "," + m_dgvRow.Cells[3].Value + "," + m_dgvRow.Cells[4].Value;
                 try { m_cogBlobMeasure.FilterRangeLow = double.Parse(m_dgvCell.Value.ToString()); } catch (Exception) { }
             }
             else if (m_intColumn == 4)
             {
+                if (m_dgvCell.Value == null)
+                    return;
                 //m_dictBlobFilters[m_dgvRow.Cells[0].Value.ToString()] = m_dgvRow.Cells[2].Value + "," + m_dgvRow.Cells[3].Value + "," + m_dgvRow.Cells[4].Value;
                 try { m_cogBlobMeasure.FilterRangeHigh = double.Parse(m_dgvCell.Value.ToString()); } catch (Exception) { }
             }
@@ -690,7 +770,7 @@ namespace VisionPro
                     m_labelSeg3.Visible = false; m_NumSegmentation3.Visible = false;
                     m_labelSeg4.Visible = false; m_NumSegmentation4.Visible = false;
                     m_labelSeg5.Visible = false; m_NumSegmentation5.Visible = false;
-                    m_SegMap.Visible = true;
+                    //m_SegMap.Visible = true;
                     break;
                 case "Hard Threshold (Relative)":
                     m_cogBlobTool.RunParams.SegmentationParams.Mode = CogBlobSegmentationModeConstants.HardRelativeThreshold;
@@ -977,6 +1057,104 @@ namespace VisionPro
             }
             catch (Exception ex)
             {
+            }
+        }
+
+        private void m_RunToolBtn_Click(object sender, EventArgs e)
+        {
+            if (m_cogImageFile.OutputImage == null)
+            {
+                MessageBox.Show("No Image Selected");
+                return;
+            }
+            cogDisplay1.Display.Image = m_cogImageFile.OutputImage;
+            cogDisplay1.Display.Fit();
+            if (tabControl1.SelectedTab.Name == "m_HistogramTab")
+                runHistogram();
+            else if (tabControl1.SelectedTab.Name == "m_BlobTab")
+                runBlob();
+            else if (tabControl1.SelectedTab.Name == "m_CaliperTab")
+                runCaliper();
+        }
+
+        private void m_btnDeleteProperties_Click(object sender, EventArgs e)
+        {
+            if (m_BlobMeasurementTable.SelectedRows == null)
+                return;
+            foreach (DataGridViewRow row in m_BlobMeasurementTable.SelectedRows)
+            {
+                String m_strName = row.Cells[0].Value.ToString();
+                m_cbBlobProperties.Items.Add(m_strName);
+                m_dictBlobFilters.Remove(m_strName);
+                m_BlobMeasurementTable.Rows.Remove(row);
+            }
+        }
+
+        private void m_cbBlobOperation_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+            m_dgvBlobOperation.Rows.Add(new string[] { m_cbBlobOperation.SelectedItem.ToString() });
+            CogBlobMorphologyConstants cogBlobMorphologyConstants;
+            Enum.TryParse(m_cbBlobOperation.SelectedItem.ToString(), out cogBlobMorphologyConstants);
+            m_cogBlobTool.RunParams.MorphologyOperations.Add(cogBlobMorphologyConstants);
+        }
+
+        private void m_BtnDeleteOperation_Click(object sender, EventArgs e)
+        {
+            if (m_dgvBlobOperation.SelectedRows == null)
+                return;
+            
+            foreach(DataGridViewRow row in m_dgvBlobOperation.SelectedRows)
+            {
+                m_cogBlobTool.RunParams.MorphologyOperations.RemoveAt(row.Index);
+                m_dgvBlobOperation.Rows.RemoveAt(row.Index);
+            }
+        }
+
+        private void m_BlobMeasurementTable_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex == -1) return;
+            DataGridView m_dataGridView = (DataGridView)sender;
+            int m_intRow = e.RowIndex;
+            int m_intColumn = e.ColumnIndex;
+            DataGridViewRow m_dgvRow = m_dataGridView.Rows[m_intRow];
+            DataGridViewCell m_dgvCell = m_dgvRow.Cells[m_intColumn];
+            
+            if (m_intColumn == 3)
+            {
+                if (m_dgvCell.Value == null)
+                    m_dgvCell.Value = "0";
+                if (m_dgvRow.Cells[4].Value == null)
+                    m_dgvRow.Cells[4].Value = "0";
+                try
+                {
+                    double low = double.Parse(m_dgvRow.Cells[3].Value.ToString());
+                    double high = double.Parse(m_dgvRow.Cells[4].Value.ToString());
+                    if (low > high)
+                        m_dgvRow.Cells[4].Value = low.ToString();
+                }catch(Exception ex)
+                {
+                    m_dgvCell.Value = "0";
+                }
+                
+            }
+            else if (m_intColumn == 4)
+            {
+                if (m_dgvCell.Value == null)
+                    m_dgvCell.Value = "0";
+                if (m_dgvRow.Cells[4].Value == null)
+                    m_dgvRow.Cells[4].Value = "0";
+                try
+                {
+                    double low = double.Parse(m_dgvRow.Cells[3].Value.ToString());
+                    double high = double.Parse(m_dgvRow.Cells[4].Value.ToString());
+                    if (high < low)
+                        m_dgvRow.Cells[3].Value = high.ToString();
+                }
+                catch (Exception ex)
+                {
+                    m_dgvCell.Value = "0";
+                }
             }
         }
     }
